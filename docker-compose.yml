@@ -2,7 +2,7 @@ version: '3.4'
 
 services:
   wordpress:
-    image: wordpress:5.4.1-php7.2-fpm
+    image: wordpress:5.5.3-php7.2-fpm
     secrets:
       - mysql_user
       - mysql_password
@@ -18,14 +18,11 @@ services:
       - db
   nginx:
     image: nginx:1.18.0
+    ports:
+     - "80:80"
     volumes:
-      - certs:/etc/nginx/certs:ro
       - wordpress:/var/www/html
       - ./config/nginx:/etc/nginx/conf.d
-    environment:
-      VIRTUAL_HOST: cdutten.com,www.cdutten.com
-      LETSENCRYPT_HOST: cdutten.com,www.cdutten.com
-      LETSENCRYPT_EMAIL: cdutten@gmail.com
     healthcheck:
             test: ["CMD", "service", "nginx", "status"]
             interval: 10s
@@ -43,48 +40,11 @@ services:
       MYSQL_USER_FILE: /run/secrets/mysql_user 
       MYSQL_PASSWORD_FILE: /run/secrets/mysql_password
       MYSQL_RANDOM_ROOT_PASSWORD: '1'
-    volumes:
-      - db:/var/lib/mysql
-    healthcheck:
-            test: ["CMD", "mysqladmin", "ping", "--user=$$(cat /run/secrets/mysql_user)", "--password=$$(cat /run/secrets/mysql_password)"]
-            interval: 5s
-            timeout: 5s
-            retries: 5
-            start_period: 30s
-  nginx-proxy:
-    image: jwilder/nginx-proxy
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - /var/run/docker.sock:/tmp/docker.sock:ro
-      - certs:/etc/nginx/certs:ro
-      - vhostd:/etc/nginx/vhost.d
-      - wordpress:/usr/share/nginx/html
-    labels:
-      - com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy
-    healthcheck:
-      test: ["CMD", "service", "nginx", "status"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-  letsencrypt:
-    image: jrcs/letsencrypt-nginx-proxy-companion
-    environment:
-      - NGINX_PROXY_CONTAINER=nginx-proxy
-    volumes:
-      - certs:/etc/nginx/certs:rw
-      - wordpress:/usr/share/nginx/html
-      - vhostd:/etc/nginx/vhost.d
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-
 volumes:
   db:
   wordpress:
-  certs:
-  vhostd:
 secrets:
    mysql_user:
-       file: ./mysql_user.txt
+       file: ./mysql_user
    mysql_password:
-       file: ./mysql_password.txt
+       file: ./mysql_password

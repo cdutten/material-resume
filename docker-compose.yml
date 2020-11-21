@@ -45,6 +45,6 @@ volumes:
   wordpress:
 secrets:
    mysql_user:
-       file: ./mysql_user
+       file: ./mysql_user.txt
    mysql_password:
-       file: ./mysql_password
+       file: ./mysql_password.txt
